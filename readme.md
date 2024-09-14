@@ -70,3 +70,5 @@ You can load .bin files into RAM or ROM and add breakpoints at addresses, check 
 - Add A atomic extension ? 
 - Add a cmd (maybe even gui?) interface that allows user to load binaries, setup extensions, configure Number of cores, etc...
 - Add a new framebuffer 'type' (RGB[A]) instead of 256 colors pallete
+
+Thanks to [Lucas Teske](https://github.com/racerxdl) for his amazing [riscv-emulator](https://github.com/racerxdl/riscv-emulator) that was base for a lot of the code on this project! Also thanks to [smunaut](https://github.com/smunaut) for his [bootloader](https://github.com/smunaut/ice40-playground/tree/master/projects/riscv_doom) and the riscv port of DOOM [riscv_doom](https://github.com/smunaut/doom_riscv).
