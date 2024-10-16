@@ -8,6 +8,9 @@
 - MMIO (ROM, WAD-ROM, RAM, BRAM, VGA, UART, SPI)
 - Multi core support* (*Experimental, needs A atomic extension not yet implemented...)
 
+![image](https://github.com/user-attachments/assets/aa8c1f37-3487-48cf-ab98-e921c3c32856)
+
+
 ### Build Guide
 In case of issues might be worth cheking the build guide for GLFW first at https://www.glfw.org/docs/3.3/compile.html
 
