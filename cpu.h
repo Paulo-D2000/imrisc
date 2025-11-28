@@ -28,6 +28,7 @@ enum OPCODE {
     OP = 0b0110011,
     MISC_MEM = 0b0001111,
     SYSTEM = 0b1110011,
+    AMO = 0b0101111
 };
 
 enum BRANCH_FUNC3{
@@ -118,6 +119,7 @@ enum CSRR_FN3 {
 #define FN3_REMU   FN3_AND
 
 /* A Extension */
+#define FN5_AMOSWAP 0b00001
 
 /* F Extension */
 
@@ -196,7 +198,9 @@ enum DISASEM_OP{
     D_blt,
     D_bge,
     D_bltu, 
-    D_bgeu, 
+    D_bgeu,
+    D_amoswap_aq,
+    D_amoswap_rl,
 };
 
 static const char* reg_names[] = {
@@ -380,6 +384,7 @@ bool cpu_cycle(CPU* cpu){
     uint8_t rs2 = imm_11_0 & 0x1F;
     uint8_t imm_11_5 = imm_11_0 >> 5;
     uint8_t funct7 = imm_11_5;
+    uint8_t funct5 = funct7 >> 2; 
     mmio_result_t t;
     switch (opcode)
     {
@@ -806,6 +811,35 @@ bool cpu_cycle(CPU* cpu){
             writeback_reg = true;
             break;
         
+
+        default:
+            break;
+        }
+        break;
+    
+    case AMO:
+        switch (funct5)
+        {
+        case FN5_AMOSWAP:
+            //x[rd] = AMO32(M[x[rs1]] SWAP x[rs2])
+            if(funct7 & 0b10)
+                cpu_disasm(cpu, D_amoswap_aq, rd, rs1, rs2);
+            else if(funct7 & 0b01)
+                cpu_disasm(cpu, D_amoswap_rl, rd, rs1, rs2);
+            else
+                return cpu_error(cpu->pc, INVALID_EXECUTE);
+            res = mmio_read(cpu->regs[rs1], _WORD);
+            if(!res.valid){
+                return cpu_error(cpu->pc, INVALID_MEM_READ);
+            }
+            new_reg = mmio_to_word(res);
+            res = mmio_write_32(cpu->regs[rs1], cpu->regs[rs2]);
+            if(!res.valid){
+                return cpu_error(cpu->pc, INVALID_MEM_READ);
+            }
+            writeback_reg = true; 
+            break;
+        
         default:
             break;
         }
@@ -865,21 +899,21 @@ bool cpu_cycle(CPU* cpu){
         case 8:
             res = mmio_write_8(mem_ptr, new_reg & 0xFF);
             if(!res.valid){
-                return cpu_error(cpu->pc, INVALID_MEM_READ);
+                return cpu_error(cpu->pc, INVALID_MEM_WRITE);
             }
             break;
 
         case 16:
             res = mmio_write_16(mem_ptr, new_reg & 0xFFFF);
             if(!res.valid){
-                return cpu_error(cpu->pc, INVALID_MEM_READ);
+                return cpu_error(cpu->pc, INVALID_MEM_WRITE);
             }
             break;
 
         case 32:
             res = mmio_write_32(mem_ptr, new_reg);
             if(!res.valid){
-                return cpu_error(cpu->pc, INVALID_MEM_READ);
+                return cpu_error(cpu->pc, INVALID_MEM_WRITE);
             }
             break;
         

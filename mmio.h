@@ -6,6 +6,8 @@
 #include "uart.h"
 #include "vga.h"
 #include "spi.h"
+#include "dma.h"
+#include "gpu.h"
 #include <stdbool.h>
 #include <stdio.h>
 
@@ -21,7 +23,14 @@ static uint32_t last_addr = 0x0;
 static uint32_t UART_KEY = 0xFFFFFFFF;
 
 static inline bool check_range(const uint32_t addr, const uint32_t begin, const uint32_t size){
-    return (addr >= begin) && (addr < (begin + size));
+    if(addr >= begin){
+        if((addr - begin) > size){
+            return 0;
+        }
+        return 1;
+    }else{
+        return 0;
+    }
 }
 /*
 mmio_result_t mmio_read(const uint32_t addr, const mmio_size_t readsize){
@@ -79,6 +88,8 @@ inline mmio_result_t mmio_read(const uint32_t addr, const mmio_size_t readsize){
     device = check_range(addr, UART_ADDR, UART_SIZE)                   ? 4 : device;
     device = check_range(addr, SPI_ADDR, SPI_SIZE - readsize )         ? 5 : device;
     device = check_range(addr, VGA_ADDR, VGA_SIZE - readsize )         ? 6 : device;
+    device = check_range(addr, DMA_ADDR, DMA_SIZE - readsize )         ? 7 : device;
+    device = check_range(addr, GPU_ADDR, GPU_SIZE - readsize )         ? 8 : device;
 
     switch (device)
     {
@@ -117,6 +128,20 @@ inline mmio_result_t mmio_read(const uint32_t addr, const mmio_size_t readsize){
             for (size_t i = 0; i < readsize; i++) res.data[i] = VGA[(addr + i) - VGA_ADDR];
         }
         res.valid = true;
+        break;
+    case 7:
+        if(addr == DMA_ADDR + BusyOffset){
+            uint32_t v = dmaBusy;
+            for (size_t i = 0; i < readsize; i++) res.data[i] = (v >> (8*i)) & 0xFF;
+            res.valid = true;
+        }
+        break;
+    case 8:
+        if(addr == GPU_ADDR + GpuBusyOffset){
+            uint32_t v = gpuBusy;
+            for (size_t i = 0; i < readsize; i++) res.data[i] = (v >> (8*i)) & 0xFF;
+            res.valid = true;
+        }
         break;
     default:
         break;
@@ -196,6 +221,8 @@ inline mmio_result_t mmio_write_n(const uint32_t addr, const uint32_t val, const
     device = check_range(addr, UART_ADDR, UART_SIZE)                    ? 4 : device;
     device = check_range(addr, SPI_ADDR, SPI_SIZE - writesize )         ? 5 : device;
     device = check_range(addr, VGA_ADDR, VGA_SIZE - writesize )         ? 6 : device;
+    device = check_range(addr, DMA_ADDR, DMA_SIZE - writesize )         ? 7 : device;
+    device = check_range(addr, GPU_ADDR, GPU_SIZE - writesize )         ? 8 : device;
 
     switch(device){
         case 0:
@@ -250,6 +277,38 @@ inline mmio_result_t mmio_write_n(const uint32_t addr, const uint32_t val, const
                 for (size_t i = 0; i < writesize; i++) VGA[scraddr + i] = res.data[i] = (val >> (i*8)) & 0xFF;
             }
             res.valid = true;
+            break;
+        case 7:
+            if(addr == DMA_ADDR + DstAddrOffset){
+                dmaDstAddr = val;
+                res.valid = true;
+            }
+            else if(addr == DMA_ADDR + SrcAddrOffset){
+                dmaSrcAddr = val;
+                res.valid = true;
+            }
+            else if(addr == DMA_ADDR + TransferSizeOffset){
+                dmaTransferSz = val;
+                res.valid = true;
+            }
+            else if(addr == DMA_ADDR + CommitOffset){
+                dmaCommit = 1;
+                res.valid = true;
+            }
+            break;
+        case 8:
+            if((addr - GPU_ADDR) < VertexSizeOffset){
+                gpuVertexQ[(addr - GPU_ADDR) / sizeof(gpuVertexQ[0])] = val;
+                res.valid = true;
+            }
+            else if(addr == GPU_ADDR + VertexSizeOffset){
+                gpuVertexSz = val;
+                res.valid = true;
+            }
+            else if(addr == GPU_ADDR + GpuCommitOffset){
+                gpuCommit = 1;
+                res.valid = true;
+            }
             break;
         default:
             break;

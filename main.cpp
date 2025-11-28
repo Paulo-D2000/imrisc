@@ -1,7 +1,7 @@
 #include "gui.h"
 
 //#define DEBUG_REGS
-//#define DEBUG_ASM
+#define DEBUG_ASM
 #define DEBUG_HIST_SIZE 1
 //#define BREAKPOINTS_ENABLED
 #include "debugging.h"
@@ -22,12 +22,158 @@ static uint32_t rgb_buffer[FRAMESIZE];
 void vga_get_buffer(){
     for (size_t i = 0; i < FRAMESIZE; i++)
     {
-        uint32_t pal_addr = 4 * VGA[i + ScreenAddressOffset] + PaletteAddressOffset;
-        uint8_t r = VGA[pal_addr + 0];
-        uint8_t g = VGA[pal_addr + 1];
-        uint8_t b = VGA[pal_addr + 2];
-        uint8_t a = VGA[pal_addr + 3];
-        rgb_buffer[i] = (a << 24) | (b << 16) | (g << 8) | r;
+#ifdef DOOM
+            // pallete mode
+            uint32_t pal_addr = 4 * VGA[i + ScreenAddressOffset] + PaletteAddressOffset;
+            uint8_t r = VGA[pal_addr + 0];
+            uint8_t g = VGA[pal_addr + 1];
+            uint8_t b = VGA[pal_addr + 2];
+            uint8_t a = VGA[pal_addr + 3];
+            rgb_buffer[i] = (a << 24) | (b << 16) | (g << 8) | r;
+#else
+            // direct mode
+            //uint8_t r = VGA[ScreenAddressOffset + 4*i + 0];
+            //uint8_t g = VGA[ScreenAddressOffset + 4*i + 1];
+            //uint8_t b = VGA[ScreenAddressOffset + 4*i + 2];
+            //uint8_t a = VGA[ScreenAddressOffset + 4*i + 3];
+            //rgb_buffer[i] = (a << 24) | (b << 16) | (g << 8) | r;
+#endif
+    }
+}
+
+void dma_controller(){
+    if(!dmaCommit && dmaBusy){
+        //printf("[DMA] Transfering %d bytes from [%08x:%08x] -> [%08x:%08x]\n", dmaTransferSz, dmaSrcAddr, dmaSrcAddr+dmaTransferSz, dmaDstAddr, dmaDstAddr+dmaTransferSz);
+        for (size_t i = 0; i < dmaTransferSz; i+=4)
+        {
+            mmio_result_t res = mmio_read(dmaSrcAddr+i, _WORD);
+            res = mmio_write_n(dmaDstAddr+i, mmio_to_word(res), _WORD);
+        }
+        dmaBusy = 0;
+    }
+    if(dmaCommit && !dmaBusy){
+        dmaBusy = 1;
+        dmaCommit = 0;
+    }
+}
+
+#define MIN(A,B) ((A) < (B) ? (A) : (B))
+#define MAX(A,B) ((A) > (B) ? (A) : (B))
+#define MUL(X,Y) ((int32_t)(((int64_t)(X) * (Y)) >> 16))
+#define DIV(X,Y) ((int32_t)(((int64_t)(X) << 16) / (Y)))
+typedef struct vec3{
+    int32_t e[3];
+}vec3;
+
+int32_t edge_cross(vec3 a, vec3 b, vec3 p){
+    vec3 ab = {{b.e[0] - a.e[0], b.e[1] - a.e[1]}};
+    vec3 ap = {{p.e[0] - a.e[0], p.e[1] - a.e[1]}};
+    return ab.e[0] * ap.e[1] - ab.e[1] * ap.e[0];
+}
+
+static int32_t zbuffer[FRAMESIZE];
+static uint8_t back_fb[FRAMESIZE*4];
+static uint8_t front_fb[FRAMESIZE*4];
+
+static volatile uint8_t* fb0 = back_fb;
+static volatile uint8_t* fb1 = front_fb;
+
+void gpu_clk(){
+
+    if(!gpuCommit && gpuBusy){
+        // draw
+        printf("[GPU] Got %d vertices\n", gpuVertexSz/3);
+
+        for (size_t i = 0; i < gpuVertexSz; i+=9)
+        {
+            // load vertices
+            vec3 v0 = {gpuVertexQ[i+0], gpuVertexQ[i+1], gpuVertexQ[i+2]};
+            vec3 v1 = {gpuVertexQ[i+3], gpuVertexQ[i+4], gpuVertexQ[i+5]};
+            vec3 v2 = {gpuVertexQ[i+6], gpuVertexQ[i+7], gpuVertexQ[i+8]};
+
+            // bounding box
+            int32_t x_min = MIN(v0.e[0], MIN(v1.e[0], v2.e[0]));
+            int32_t y_min = MIN(v0.e[1], MIN(v1.e[1], v2.e[1]));
+            int32_t x_max = MAX(v0.e[0], MAX(v1.e[0], v2.e[0]));
+            int32_t y_max = MAX(v0.e[1], MAX(v1.e[1], v2.e[1]));
+
+            int32_t area = edge_cross(v0, v1, v2);
+
+            for (int y = y_min; y < y_max; y++){
+                for (int x = x_min; x < x_max; x++){
+                    vec3 p = {{x,y,0}};
+                    
+                    int32_t w0 = edge_cross(v1, v2, p);
+                    int32_t w1 = edge_cross(v2, v0, p);
+                    int32_t w2 = edge_cross(v0, v1, p);
+
+                    if(w0 >= 0 && w1 >= 0 && w2 >= 0){
+                        w0 = DIV(w0, area),w1 = DIV(w1, area),w2 = DIV(w2, area);
+                        int32_t z = MUL(v0.e[2], w0) + MUL(v1.e[2], w1) + MUL(v2.e[2], w2);
+                        
+                        uint32_t ptr = (x+y*SCREENWIDTH);
+                        if(z < zbuffer[ptr]){
+                            zbuffer[ptr] = z;
+                            if(0){
+                                fb0[4*ptr + 0] = w0 >> 8;
+                                fb0[4*ptr + 1] = w1 >> 8;
+                                fb0[4*ptr + 2] = w2 >> 8;
+                                fb0[4*ptr + 3] = 0xFF;
+                            }
+                            else if(1){
+                                int f = 4;
+                                int u = MUL(w0, z);
+                                int v = MUL(w1, z);
+                                int check = (((f*u) >> 16) + ((f*v) >> 16)) % 2;
+                                fb0[4*ptr + 0] = check ? 0xff : 0x00;
+                                fb0[4*ptr + 1] = check ? 0xff : 0x00;
+                                fb0[4*ptr + 2] = check ? 0xff : 0x00;
+                                fb0[4*ptr + 3] = 0xFF;
+                            }
+                            else{
+                                fb0[4*ptr + 0] = MIN(255,MAX(0,(32768+MUL(32768,z)) >> 8));
+                                fb0[4*ptr + 1] = MIN(255,MAX(0,(32768+MUL(32768,z)) >> 8));
+                                fb0[4*ptr + 2] = MIN(255,MAX(0,(32768+MUL(32768,z)) >> 8));
+                                fb0[4*ptr + 3] = 0xFF;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // copy data to vga
+        memcpy((void*)rgb_buffer, (void*)fb0, 4*FRAMESIZE);
+        
+
+        // swap fb's
+        volatile uint8_t* temp = fb0;
+        fb0 = fb1;
+        fb1 = temp;
+
+        gpuVertexSz = 0;
+        gpuBusy = 0; 
+        printf("GPU is Done!\n");
+    }
+    if(gpuCommit && !gpuBusy){
+        printf("[GPU] Data commited!\n");
+        gpuBusy = 1;
+        gpuCommit = 0;
+
+        // clear
+        printf("[GPU] Clear()\n");
+        for (size_t i = 0; i < SCREENWIDTH; i++)
+        {
+            for (size_t j = 0; j < SCREENHEIGHT; j++)
+            {
+                uint32_t ptr = (i+j*SCREENWIDTH);
+                fb0[4*ptr+0] = 0;
+                fb0[4*ptr+1] = 0;
+                fb0[4*ptr+2] = 0;
+                fb0[4*ptr+3] = 0xff;
+                zbuffer[ptr] = INT32_MAX;
+            }
+        }
     }
 }
 
@@ -127,10 +273,14 @@ long file_load_alloc(const char* path, uint8_t** ptr, size_t* alloc_size){
 #define BOOTADDR BRAM_ADDR
 #endif
 
-#define DOOM
+//#define DOOM
 
 void LoadDoom()
 {
+    memset(VGA, 0, VGA_SIZE);
+    memset(ROM, 0, ROM_SIZE);
+    memset(RAM, 0, RAM_SIZE);
+    memset(BRAM, 0, BRAM_SIZE);
 #ifdef DOOM
     const char* bootloader_path = "../boot.bin";
     const char* doom_wad_path = "../DOOM.WAD";
@@ -172,16 +322,16 @@ void LoadDoom()
     //BREAKPOINTS[ACTIVE_BREAKPOINTS].enabled = true;
     //ACTIVE_BREAKPOINTS++;
     
-    long result = hex_load("../helloworld.rom", ROM, ROM_SIZE);
-    result = hex_load("../helloworld.ram", RAM, RAM_SIZE);
-    #define BOOTADDR ROM_ADDR
+    //long result = hex_load("../helloworld.rom", ROM, ROM_SIZE);
+    long result = file_load("../program.bin", RAM, RAM_SIZE);
+    #define BOOTADDR RAM_ADDR
 
-    printf("Trying to load symbols...\n");
-    long tab_sz = load_symbols("../helloworld.sym");
-    if(tab_sz == -1){
-        printf("[ERROR] Failed to load symbols!\n");
-        exit(-1);
-    }
+    //printf("Trying to load symbols...\n");
+    //long tab_sz = load_symbols("../helloworld.sym");
+    //if(tab_sz == -1){
+    //    printf("[ERROR] Failed to load symbols!\n");
+    //    exit(-1);
+    //}
 #endif
     vga_start();
 
@@ -312,13 +462,17 @@ void rv32i_threads(){
         }
         
         ret = 1;
-        for (size_t i = 0; i < NCPUS; i++)
-            ret &= cpu_cycle(&rv32i[i]);
+        if(!dmaBusy)
+            for (size_t i = 0; i < NCPUS; i++)
+                ret &= cpu_cycle(&rv32i[i]);
+
+        dma_controller();
+
+        gpu_clk();
 
         uart_printf();
-
-        cycles++;
-        continue;
+        if(!dmaBusy)
+            cycles++;
     }
 }
 
@@ -439,7 +593,7 @@ int main(int, char**)
     if(!gui.Init()){
         return -1;
     }
-    //jump_cycles = false;
+    jump_cycles = true;
     std::thread cores(rv32i_threads);
 
     while(gui.Run()){

@@ -21,6 +21,10 @@ void uart_printf(){
     }
     if(UART[0] != 0  && uart_newbyte){
         uart_newbyte = false;
+        // bug fix
+        if(i == 255){
+            i = 0;
+        }
         buffer[i++] = UART[0];
         if(UART[0] == '\n') start = true;
     }
@@ -306,13 +310,31 @@ void cpu_print_asm(const CPU* cpu, const enum DISASEM_OP op, uint32_t param0, ui
     case D_bgeu:
         printf("bgeu %s, %s, %d\n", reg_names[param0],  reg_names[param1], param2);
         break;
+    case D_amoswap_aq:
+        printf("amoswap.w.aq %s, %s, 0(%s)\n", reg_names[param0],  reg_names[param1], reg_names[param2]);
+        break;
+    case D_amoswap_rl:
+        printf("amoswap.w.rl %s, %s, 0(%s)\n", reg_names[param0],  reg_names[param1], reg_names[param2]);
+        break;
     
     default:
         break;
     }
 }
 
-#define op_special(op) op != D_ebreak&& op != D_ecall&& op != D_fence && op != D_csrrw && op != D_csrrs && op != D_csrrc && op != D_csrrwi && op != D_csrrsi && op != D_csrrci 
+#define op_special(op) op != D_ebreak && \
+                       op != D_ecall  && \
+                       op != D_fence && \
+                       op != D_amoswap_aq && \
+                       op != D_amoswap_rl
+                       /* 
+                       op != D_csrrw  && \
+                       op != D_csrrs  && \
+                       op != D_csrrc  && \
+                       op != D_csrrwi && \
+                       op != D_csrrsi && \
+                       op != D_csrrci && \
+                       */
 
 #ifdef DEBUG_REGS
     void cpu_debug(const CPU* cpu){if(jump_cycles){return;} bcpu=true; /*if(cpu->pc < 0x40100050){ return; }*/ cpu_print_regs(cpu); }

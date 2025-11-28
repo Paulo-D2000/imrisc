@@ -1,1 +1,1 @@
-#define NCPUS 1
+#define NCPUS 4
