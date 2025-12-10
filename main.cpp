@@ -307,6 +307,13 @@ void gpu_clk(){
                         int32_t y_max = MAX(v0.e[1], MAX(v1.e[1], v2.e[1]));
 
                         int32_t area = edge_cross(v0, v1, v2);
+
+                        if(area <= 0){
+                            if(GPU_LOG) printf("[GPU] Backface culled triangle %ld\n", tri/3);
+                            continue; // backface culling
+                        }
+
+                        int32_t inv_area = DIV(ONE, area);
                         
                         for (int y = y_min; y < y_max; y++){
                             for (int x = x_min; x < x_max; x++){
@@ -317,9 +324,14 @@ void gpu_clk(){
                                 int32_t w2 = edge_cross(v0, v1, p);
 
                                 if(w0 >= 0 && w1 >= 0 && w2 >= 0){
-                                    w0 = DIV(w0, area),w1 = DIV(w1, area),w2 = DIV(w2, area);
+                                    // Divide by area to get barycentric coordinates
+                                    w0 = MUL(w0, inv_area);
+                                    w1 = MUL(w1, inv_area);
+                                    w2 = MUL(w2, inv_area);
+
+                                    // Get Z
                                     int32_t z = MUL(v0.e[2], w0) + MUL(v1.e[2], w1) + MUL(v2.e[2], w2);
-                                    
+
                                     uint32_t ptr = (x+y*SCREENWIDTH);
                                     if(z < zbuffer[ptr]){
                                         zbuffer[ptr] = z;
@@ -329,21 +341,24 @@ void gpu_clk(){
                                             fb0[4*ptr + 2] = w2 >> 8;
                                             fb0[4*ptr + 3] = 0xFF;
                                         }
+                                        else {
+                                            // Z-buffer grayscale visualization
+                                            int32_t depth_vis = 255 - ((z >> 9) & 0xFF);   // z is fixed-point, shift down
+                                            if (depth_vis < 0) depth_vis = 0;
+                                            if (depth_vis > 255) depth_vis = 255;
+
+                                            fb0[4*ptr + 0] = depth_vis;
+                                            fb0[4*ptr + 1] = depth_vis;
+                                            fb0[4*ptr + 2] = depth_vis;
+                                            fb0[4*ptr + 3] = 0xFF;
+                                        }
                                     }
                                 }
                             }
                         }
                     }
-                    
-                    // copy data to vga
-                    memcpy((void*)rgb_buffer, (void*)fb0, 4*FRAMESIZE);
 
-                    // swap fb's
-                    volatile uint8_t* temp = fb0;
-                    fb0 = fb1;
-                    fb1 = temp;
-
-                    if(GPU_LOG) printf("[GPU] Done!\n");
+                    if(GPU_LOG) printf("[GPU] Draw Done!\n");
                 }
                 break;
 
@@ -362,9 +377,19 @@ void gpu_clk(){
                         fenceParams[i] = mmio_to_word(res);
                         gpuRingBufferReadPtr = (gpuRingBufferReadPtr + 4) % gpuRingBufferSize;
                     }
+
                     if(GPU_LOG) printf("[GPU] FENCE WriteAddr: %08x, WriteValue: %08x\n", fenceParams[0], fenceParams[1]);
+
                     // write value to addr
                     mmio_write_n(fenceParams[0], fenceParams[1], _WORD);
+
+                    // Present frame (copy back buffer to display and swap)
+                    memcpy((void*)rgb_buffer, (void*)fb0, 4*FRAMESIZE);
+                    
+                    // swap fb's for next frame
+                    volatile uint8_t* temp = fb0;
+                    fb0 = fb1;
+                    fb1 = temp;
                 }
                 break;
 
