@@ -7,8 +7,8 @@
 #define ControlAddressOffset 0x00000
 #define PaletteAddressOffset 0x10000
 #define ScreenAddressOffset 0x20000 // Palette Size
-#define SCREENWIDTH  320
-#define SCREENHEIGHT 200
+#define SCREENWIDTH  640
+#define SCREENHEIGHT 480
 #define FRAMESIZE (SCREENHEIGHT*SCREENWIDTH)
 #define VGA_SIZE (5*FRAMESIZE)
 

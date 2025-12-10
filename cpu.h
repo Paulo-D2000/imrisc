@@ -309,6 +309,36 @@ typedef enum CSRMMode{
     mtval     = 0x343,
 };
 
+typedef enum InterruptCode{
+    Supervisor_software_interrupt = 1,
+    Machine_software_interrupt = 3,
+    Supervisor_timer_interrupt = 5,
+    Machine_timer_interrupt = 7,
+    Supervisor_external_interrupt = 9,
+    Machine_external_interrupt = 11,
+    Counter_overflow_interrupt = 13,
+};
+
+typedef enum ExceptionCode{
+    Instruction_address_misaligned = 0,
+    Instruction_access_fault,
+    Illegal_instruction,
+    Breakpoint,
+    Load_address_misaligned,
+    Load_access_fault,
+    Store_AMO_address_misaligned,
+    Store_AMO_access_fault,
+    Environment_call_from_U_mode,
+    Environment_call_from_S_mode,
+    Environment_call_from_M_mode = 11,
+    Instruction_page_fault,
+    Load_page_fault,
+    Store_AMO_page_fault = 15,
+    Double_trap,
+    Software_check = 18,
+    Hardware_error,
+};
+
 extern void cpu_debug(const CPU* cpu);
 extern bool cpu_error(const uint32_t pc, enum Error_t code);
 extern void cpu_disasm(const CPU* cpu, const enum DISASEM_OP op, uint32_t param0, uint32_t param1, uint32_t param2);
@@ -326,6 +356,96 @@ inline void trap(CPU* cpu){
     
     uint32_t addr = (cpu->CSRs[mtvec] & 0b11) ? (cpu->CSRs[mtvec] & 0xfffffffc) + offset + (index << 2) : cpu->CSRs[mtvec];
     printf("[TRAP] Trap at %08x, jumping to %08x, Interrupt: %d\n", cpu->pc, addr, isinterrupt);
+
+    // Switch index and print ExceptionCode/InterruptCode enum name for all enums!
+    printf("[TRAP] Cause Code: %d\n", index);
+    if(isinterrupt){
+        switch(index){
+            case Supervisor_software_interrupt:
+                printf("  Interrupt: Supervisor_software_interrupt\n");
+                break;
+            case Machine_software_interrupt:
+                printf("  Interrupt: Machine_software_interrupt\n");
+                break;
+            case Supervisor_timer_interrupt:
+                printf("  Interrupt: Supervisor_timer_interrupt\n");
+                break;
+            case Machine_timer_interrupt:
+                printf("  Interrupt: Machine_timer_interrupt\n");
+                break;
+            case Supervisor_external_interrupt:
+                printf("  Interrupt: Supervisor_external_interrupt\n");
+                break;
+            case Machine_external_interrupt:
+                printf("  Interrupt: Machine_external_interrupt\n");
+                break;
+            case Counter_overflow_interrupt:
+                printf("  Interrupt: Counter_overflow_interrupt\n");
+                break;
+            default:
+                printf("  Interrupt: Unknown (%d)\n", index);
+                break;
+        }
+    }
+    else{
+        switch(index){
+            case Instruction_address_misaligned:
+                printf("  Exception: Instruction_address_misaligned\n");
+                break;
+            case Instruction_access_fault:
+                printf("  Exception: Instruction_access_fault\n");
+                break;
+            case Illegal_instruction:
+                printf("  Exception: Illegal_instruction\n");
+                break;
+            case Breakpoint:
+                printf("  Exception: Breakpoint\n");
+                break;
+            case Load_address_misaligned:
+                printf("  Exception: Load_address_misaligned\n");
+                break;
+            case Load_access_fault:
+                printf("  Exception: Load_access_fault\n");
+                break;
+            case Store_AMO_address_misaligned:
+                printf("  Exception: Store_AMO_address_misaligned\n");
+                break;
+            case Store_AMO_access_fault:
+                printf("  Exception: Store_AMO_access_fault\n");
+                break;
+            case Environment_call_from_U_mode:
+                printf("  Exception: Environment_call_from_U_mode\n");
+                break;
+            case Environment_call_from_S_mode:
+                printf("  Exception: Environment_call_from_S_mode\n");
+                break;
+            case Environment_call_from_M_mode:
+                printf("  Exception: Environment_call_from_M_mode\n");
+                break;
+            case Instruction_page_fault:
+                printf("  Exception: Instruction_page_fault\n");
+                break;
+            case Load_page_fault:
+                printf("  Exception: Load_page_fault\n");
+                break;
+            case Store_AMO_page_fault:
+                printf("  Exception: Store_AMO_page_fault\n");
+                break;
+            case Double_trap:
+                printf("  Exception: Double_trap\n");
+                break;
+            case Software_check:
+                printf("  Exception: Software_check\n");
+                break;
+            case Hardware_error:
+                printf("  Exception: Hardware_error\n");
+                break;
+            default:
+                printf("  Exception: Unknown (%d)\n", index);
+                break;
+        }
+    }
+
     cpu->pc = addr;
 }
 

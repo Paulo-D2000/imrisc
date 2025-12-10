@@ -137,8 +137,15 @@ inline mmio_result_t mmio_read(const uint32_t addr, const mmio_size_t readsize){
         }
         break;
     case 8:
-        if(addr == GPU_ADDR + GpuBusyOffset){
-            uint32_t v = gpuBusy;
+        //printf("[MMIO][READ][GPU] ADDR: %08x\n", addr);
+        // read status and rptr
+        if(addr == GPU_ADDR + GpuStatusOffset){
+            uint32_t v = gpuStatus;
+            for (size_t i = 0; i < readsize; i++) res.data[i] = (v >> (8*i)) & 0xFF;
+            res.valid = true;
+        }
+        else if(addr == GPU_ADDR + GpuRingBufferReadPtr){
+            uint32_t v = gpuRingBufferReadPtr;
             for (size_t i = 0; i < readsize; i++) res.data[i] = (v >> (8*i)) & 0xFF;
             res.valid = true;
         }
@@ -297,18 +304,24 @@ inline mmio_result_t mmio_write_n(const uint32_t addr, const uint32_t val, const
             }
             break;
         case 8:
-            if((addr - GPU_ADDR) < VertexSizeOffset){
-                gpuVertexQ[(addr - GPU_ADDR) / sizeof(gpuVertexQ[0])] = val;
+            //printf("[MMIO][WRITE][GPU] ADDR: %08x\n", addr);
+            // all writable regs
+            if(addr == GPU_ADDR + GpuRingBufferBase){
+                gpuRingBufferBase = val;
                 res.valid = true;
             }
-            else if(addr == GPU_ADDR + VertexSizeOffset){
-                gpuVertexSz = val;
+            else if(addr == GPU_ADDR + GpuRingBufferSize){
+                gpuRingBufferSize = val;
                 res.valid = true;
             }
-            else if(addr == GPU_ADDR + GpuCommitOffset){
-                gpuCommit = 1;
+            else if(addr == GPU_ADDR + GpuRingBufferWritePtr){
+                gpuRingBufferWritePtr = val;
                 res.valid = true;
             }
+            //else if(addr == GPU_ADDR + GpuStatusOffset){
+            //    gpuStatus = val;
+            //    res.valid = true;
+            //}
             break;
         default:
             break;
