@@ -161,6 +161,44 @@ void transform_vertex(Vec3i in, Vec3i* out,
     out->e[2] = MIN(ONE, MAX(-ONE, projectedVert.e[2]));
 }
 
+static inline void compute_normal(Vec3i a, Vec3i b, Vec3i c, Vec3i* out)
+{
+    int32_t x1 = b.e[0] - a.e[0];
+    int32_t y1 = b.e[1] - a.e[1];
+    int32_t z1 = b.e[2] - a.e[2];
+
+    int32_t x2 = c.e[0] - a.e[0];
+    int32_t y2 = c.e[1] - a.e[1];
+    int32_t z2 = c.e[2] - a.e[2];
+
+    out->e[0] = MUL(y1, z2) - MUL(z1, y2);
+    out->e[1] = MUL(z1, x2) - MUL(x1, z2);
+    out->e[2] = MUL(x1, y2) - MUL(y1, x2);
+}
+
+static inline void project_uv(Vec3i v, Vec3i normal, int32_t* u, int32_t* t)
+{
+    int32_t ax = abs(normal.e[0]);
+    int32_t ay = abs(normal.e[1]);
+    int32_t az = abs(normal.e[2]);
+
+    if (ax >= ay && ax >= az) {
+        // X-major face → use YZ
+        *u = (v.e[1] >> 4) & 0xFFFF;
+        *t = (v.e[2] >> 4) & 0xFFFF;
+    }
+    else if (ay >= ax && ay >= az) {
+        // Y-major face → use XZ
+        *u = (v.e[0] >> 4) & 0xFFFF;
+        *t = (v.e[2] >> 4) & 0xFFFF;
+    }
+    else {
+        // Z-major face → use XY
+        *u = (v.e[0] >> 4) & 0xFFFF;
+        *t = (v.e[1] >> 4) & 0xFFFF;
+    }
+}
+
 static int32_t zbuffer[FRAMESIZE];
 static uint8_t back_fb[FRAMESIZE*4];
 static uint8_t front_fb[FRAMESIZE*4];
@@ -245,6 +283,9 @@ void gpu_clk(){
                     // Read time from uniform
                     int32_t time = gpuUniforms[UNIFORM_TIME][0];
 
+                    // Time based render mode
+                    uint8_t render_mode = (time >> 8) & 0b11;
+
                     // Draw triangles (process every 3 vertices as one triangle)
                     for (size_t tri = 0; tri < vertexCount; tri += 3)
                     {
@@ -293,6 +334,19 @@ void gpu_clk(){
                         if(res.valid) v2.e[2] = mmio_to_word(res);
                         else if(GPU_LOG) printf("[GPU] ERROR: Failed to read v2.z\n");
 
+                        // Generate UVs based on vertex position (for now, no explicit UVs)
+                        // Map vertex position to UV space [0, ONE]
+                        Vec3i normal;
+                        compute_normal(v0, v1, v2, &normal);
+
+                        int32_t u0, v0_tex;
+                        int32_t u1, v1_tex;
+                        int32_t u2, v2_tex;
+
+                        project_uv(v0, normal, &u0, &v0_tex);
+                        project_uv(v1, normal, &u1, &v1_tex);
+                        project_uv(v2, normal, &u2, &v2_tex);
+
                         // Transform
                         Vec3i tmp_v0, tmp_v1, tmp_v2;
                         transform_vertex(v0, &tmp_v0, modelMatrix, viewMatrix, projMatrix);
@@ -307,7 +361,7 @@ void gpu_clk(){
                         int32_t y_max = MAX(v0.e[1], MAX(v1.e[1], v2.e[1]));
 
                         int32_t area = edge_cross(v0, v1, v2);
-
+                        
                         if(area <= 0){
                             if(GPU_LOG) printf("[GPU] Backface culled triangle %ld\n", tri/3);
                             continue; // backface culling
@@ -335,23 +389,88 @@ void gpu_clk(){
                                     uint32_t ptr = (x+y*SCREENWIDTH);
                                     if(z < zbuffer[ptr]){
                                         zbuffer[ptr] = z;
-                                        if(1){
-                                            fb0[4*ptr + 0] = w0 >> 8;
-                                            fb0[4*ptr + 1] = w1 >> 8;
-                                            fb0[4*ptr + 2] = w2 >> 8;
-                                            fb0[4*ptr + 3] = 0xFF;
+
+                                        // Simple affine interpolation of UV coordinates
+                                        int32_t u_interp = MUL(u0, w0) + MUL(u1, w1) + MUL(u2, w2);
+                                        int32_t v_interp = MUL(v0_tex, w0) + MUL(v1_tex, w1) + MUL(v2_tex, w2);
+                                        
+                                        uint8_t r, g, b, a;
+                                        if(render_mode == 0){
+                                            // UV VISUALIZATION: U=R, V=G, B=64
+                                            r = (u_interp >> 8) & 0xFF;  // U -> Red channel
+                                            g = (v_interp >> 8) & 0xFF;  // V -> Green channel
+                                            b = 64;                      // Fixed blue
+                                            a = 0xFF;
                                         }
-                                        else {
+                                        else if(render_mode == 1){
+                                            // CHECKERBOARD PATTERN
+                                            // Use UV coords to create checkerboard (8x8 grid)
+                                            int checker_u = (u_interp >> 13) & 1;  // Divide UV into 8 sections
+                                            int checker_v = (v_interp >> 13) & 1;
+                                            int checker = checker_u ^ checker_v;   // XOR for checkerboard
+                                            
+                                            if(checker){
+                                                r = 255; g = 255; b = 255;  // White
+                                            } else {
+                                                r = 0; g = 0; b = 0;        // Black
+                                            }
+                                            a = 0xFF;
+                                        }
+                                        else if(render_mode == 2){
+                                            // TEXTURE SAMPLING from texture unit 0
+                                            if(gpuTextureAddr[0] != 0 && gpuTextureWidth[0] > 0 && gpuTextureHeight[0] > 0){
+                                                // Map UV coordinates [0, ONE] to texture dimensions
+                                                int tex_x = ((u_interp >> 8) * gpuTextureWidth[0]) >> 8;
+                                                int tex_y = ((v_interp >> 8) * gpuTextureHeight[0]) >> 8;
+                                                
+                                                // Clamp to texture bounds
+                                                if(tex_x < 0) tex_x = 0;
+                                                if(tex_x >= gpuTextureWidth[0]) tex_x = gpuTextureWidth[0] - 1;
+                                                if(tex_y < 0) tex_y = 0;
+                                                if(tex_y >= gpuTextureHeight[0]) tex_y = gpuTextureHeight[0] - 1;
+                                                
+                                                // Read from texture memory (assuming RGBA format)
+                                                uint32_t tex_addr = gpuTextureAddr[0] + (tex_x + tex_y * gpuTextureWidth[0]) * 4;
+                                                
+                                                res = mmio_read(tex_addr + 0, _BYTE);
+                                                r = res.valid ? res.data[0] : 0;
+                                                
+                                                res = mmio_read(tex_addr + 1, _BYTE);
+                                                g = res.valid ? res.data[0] : 0;
+                                                
+                                                res = mmio_read(tex_addr + 2, _BYTE);
+                                                b = res.valid ? res.data[0] : 0;
+                                                
+                                                res = mmio_read(tex_addr + 3, _BYTE);
+                                                a = res.valid ? res.data[0] : 0xFF;
+                                            } else {
+                                                // No texture bound, render magenta as error color
+                                                r = 255; g = 0; b = 255; a = 255;
+                                            }
+                                        }
+                                        else if (render_mode == 3){
                                             // Z-buffer grayscale visualization
-                                            int32_t depth_vis = 255 - ((z >> 9) & 0xFF);   // z is fixed-point, shift down
+                                            int32_t depth_vis = 255 - ((z & 0xFFF) >> 4);   // z is fixed-point, shift down
                                             if (depth_vis < 0) depth_vis = 0;
                                             if (depth_vis > 255) depth_vis = 255;
 
-                                            fb0[4*ptr + 0] = depth_vis;
-                                            fb0[4*ptr + 1] = depth_vis;
-                                            fb0[4*ptr + 2] = depth_vis;
-                                            fb0[4*ptr + 3] = 0xFF;
+                                            r = depth_vis;
+                                            g = depth_vis;
+                                            b = depth_vis;
+                                            a = 0xFF;
                                         }
+                                        else {
+                                            // Barycentric weights visualization
+                                            r = w0 >> 8;
+                                            g = w1 >> 8;
+                                            b = w2 >> 8;
+                                            a = 0xFF;
+                                        }
+
+                                        fb0[4*ptr + 0] = r;
+                                        fb0[4*ptr + 1] = g;
+                                        fb0[4*ptr + 2] = b;
+                                        fb0[4*ptr + 3] = a;
                                     }
                                 }
                             }
