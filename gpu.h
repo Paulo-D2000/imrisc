@@ -78,4 +78,17 @@ static Matrix44i gpuUniformMatrices[8];     // Mat4x4s
 static uint32_t gpuTextureAddr[8] = {0};
 static uint32_t gpuTextureWidth[8] = {0};
 static uint32_t gpuTextureHeight[8] = {0};
+
+// Warp State
+#define NWAYS 4
+#define WARP_STACK_DEPTH 16
+typedef struct GpuWarpState{
+    uint32_t pc;
+    uint32_t vregs[32*NWAYS]; // r0 - r31
+    uint32_t sregs[NWAYS]; // r0 - r31
+    uint32_t pc_stack[NWAYS*WARP_STACK_DEPTH]; // pc stack for calls/branches
+    bool active_mask_stack[NWAYS*WARP_STACK_DEPTH]; // active mask stack for calls/branches
+    uint32_t stack_ptr;
+} GpuWarpState;
+
 void gpu_clk();

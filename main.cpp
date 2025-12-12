@@ -206,6 +206,11 @@ static uint8_t front_fb[FRAMESIZE*4];
 static volatile uint8_t* fb0 = back_fb;
 static volatile uint8_t* fb1 = front_fb;
 
+
+static inline uint32_t warp_fetch(){
+    
+}
+
 void gpu_clk(){
     // Validate ring buffer configuration
     if(gpuRingBufferSize == 0) return;
