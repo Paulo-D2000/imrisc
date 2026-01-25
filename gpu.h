@@ -1,8 +1,9 @@
-#pragma once
+#ifndef GPU_H
+#define GPU_H
 
 #include <stdint.h>
 #include <stdbool.h>
-#include "cpu.h"
+#include "isa.h"
 
 /**
  * GPU INTERFACE
@@ -92,3 +93,5 @@ typedef struct GpuWarpState{
 } GpuWarpState;
 
 void gpu_clk();
+
+#endif // GPU_H

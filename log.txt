@@ -1,0 +1,699 @@
+[INFO] Input Program:
+
+    .start:
+        LI x1, 3
+        LA x10, .end0
+        CSRRW  x0, reconvpc, x10
+        LI x10, 0
+        CSRRS x5, mhartid, x0
+        BGT x5, x1, .if0
+    .else0:
+        LI x14, 14
+        LI x15, 15
+        LI x2, 1
+        LA x10, .end1
+        CSRRW  x0, reconvpc, x10
+        LI x10, 0
+        BGT x5, x2, .if1
+    .else1:
+        LI x20, 20
+        LI x21, 21
+        JMP .end1
+    .if1:
+        LI x22, 22
+        LI x23, 23
+    .end1:
+        LI x24, 24
+        LI x25, 25
+        #LA x10, .end0
+        #CSRRW  x0, reconvpc, x10
+        #LI x10, 0
+        JMP .end0
+    .if0:
+        LI x16, 16
+        LI x17, 17
+    .end0:
+        LI x18, 18
+        LI x19, 19
+    
+[INFO] Linking to 0x80000000
+Resolving (high) address '%pcrel_hi(.end0)' (label index 2147483748) to byte offset 0
+Resolving (low) address '%pcrel_lo(.end0)' (label index 2147483748) to byte offset 96
+Resolving label '.if0' (label index 2147483740) to byte offset 68
+Resolving (high) address '%pcrel_hi(.end1)' (label index 2147483728) to byte offset 0
+Resolving (low) address '%pcrel_lo(.end1)' (label index 2147483728) to byte offset 40
+Resolving label '.if1' (label index 2147483720) to byte offset 16
+Resolving label '.end1' (label index 2147483728) to byte offset 12
+Resolving label '.end0' (label index 2147483748) to byte offset 12
+[DEBUG] Instructions:
+.start:
+    80000000 Instr(op=<Op.ADDI: 12>, dst=1, src1=0, src2=0, imm=3, comment='# Load 3 to 1')
+    80000004 Instr(op=<Op.AUIPC: 15>, dst=10, src1=0, src2=0, imm=0, comment='# Load high part of address for .end0')
+    80000008 Instr(op=<Op.ADDI: 12>, dst=10, src1=10, src2=0, imm=96, comment='# Add low part of address for .end0')
+    8000000c Instr(op=<Op.CSRRW: 14>, dst=0, src1=10, src2=0, imm=<CSR.reconvpc: 3008>, comment='# Read CSR reconvpc')
+    80000010 Instr(op=<Op.ADDI: 12>, dst=10, src1=0, src2=0, imm=0, comment='# Load 0 to 10')
+    80000014 Instr(op=<Op.CSRRS: 13>, dst=5, src1=0, src2=0, imm=<CSR.mhartid: 3860>, comment='# Read CSR mhartid')
+    80000018 Instr(op=<Op.BGT: 8>, dst=0, src1=5, src2=1, imm=68, comment='# Branch BGT x5 with x1 to .if0')
+.else0:
+    8000001c Instr(op=<Op.ADDI: 12>, dst=14, src1=0, src2=0, imm=14, comment='# Load 14 to 14')
+    80000020 Instr(op=<Op.ADDI: 12>, dst=15, src1=0, src2=0, imm=15, comment='# Load 15 to 15')
+    80000024 Instr(op=<Op.ADDI: 12>, dst=2, src1=0, src2=0, imm=1, comment='# Load 1 to 2')
+    80000028 Instr(op=<Op.AUIPC: 15>, dst=10, src1=0, src2=0, imm=0, comment='# Load high part of address for .end1')
+    8000002c Instr(op=<Op.ADDI: 12>, dst=10, src1=10, src2=0, imm=40, comment='# Add low part of address for .end1')
+    80000030 Instr(op=<Op.CSRRW: 14>, dst=0, src1=10, src2=0, imm=<CSR.reconvpc: 3008>, comment='# Read CSR reconvpc')
+    80000034 Instr(op=<Op.ADDI: 12>, dst=10, src1=0, src2=0, imm=0, comment='# Load 0 to 10')
+    80000038 Instr(op=<Op.BGT: 8>, dst=0, src1=5, src2=2, imm=16, comment='# Branch BGT x5 with x2 to .if1')
+.else1:
+    8000003c Instr(op=<Op.ADDI: 12>, dst=20, src1=0, src2=0, imm=20, comment='# Load 20 to 20')
+    80000040 Instr(op=<Op.ADDI: 12>, dst=21, src1=0, src2=0, imm=21, comment='# Load 21 to 21')
+    80000044 Instr(op=<Op.JMP: 11>, dst=0, src1=0, src2=0, imm=12, comment='# Unconditional jump to .end1')
+.if1:
+    80000048 Instr(op=<Op.ADDI: 12>, dst=22, src1=0, src2=0, imm=22, comment='# Load 22 to 22')
+    8000004c Instr(op=<Op.ADDI: 12>, dst=23, src1=0, src2=0, imm=23, comment='# Load 23 to 23')
+.end1:
+    80000050 Instr(op=<Op.ADDI: 12>, dst=24, src1=0, src2=0, imm=24, comment='# Load 24 to 24')
+    80000054 Instr(op=<Op.ADDI: 12>, dst=25, src1=0, src2=0, imm=25, comment='# Load 25 to 25')
+    80000058 Instr(op=<Op.JMP: 11>, dst=0, src1=0, src2=0, imm=12, comment='# Unconditional jump to .end0')
+.if0:
+    8000005c Instr(op=<Op.ADDI: 12>, dst=16, src1=0, src2=0, imm=16, comment='# Load 16 to 16')
+    80000060 Instr(op=<Op.ADDI: 12>, dst=17, src1=0, src2=0, imm=17, comment='# Load 17 to 17')
+.end0:
+    80000064 Instr(op=<Op.ADDI: 12>, dst=18, src1=0, src2=0, imm=18, comment='# Load 18 to 18')
+    80000068 Instr(op=<Op.ADDI: 12>, dst=19, src1=0, src2=0, imm=19, comment='# Load 19 to 19')
+------- Cycle 0 ------- 
+[ACTIVE]: 11111111
+[PC: 0x80000000][WAY 0] ADDI 1, 0, 3
+[PC: 0x80000000][WAY 1] ADDI 1, 0, 3
+[PC: 0x80000000][WAY 2] ADDI 1, 0, 3
+[PC: 0x80000000][WAY 3] ADDI 1, 0, 3
+[PC: 0x80000000][WAY 4] ADDI 1, 0, 3
+[PC: 0x80000000][WAY 5] ADDI 1, 0, 3
+[PC: 0x80000000][WAY 6] ADDI 1, 0, 3
+[PC: 0x80000000][WAY 7] ADDI 1, 0, 3
+------------------------------
+------- Cycle 1 ------- 
+[ACTIVE]: 11111111
+[PC: 0x80000004][WAY 0] AUIPC 10, 0, 0
+[PC: 0x80000004][WAY 1] AUIPC 10, 0, 0
+[PC: 0x80000004][WAY 2] AUIPC 10, 0, 0
+[PC: 0x80000004][WAY 3] AUIPC 10, 0, 0
+[PC: 0x80000004][WAY 4] AUIPC 10, 0, 0
+[PC: 0x80000004][WAY 5] AUIPC 10, 0, 0
+[PC: 0x80000004][WAY 6] AUIPC 10, 0, 0
+[PC: 0x80000004][WAY 7] AUIPC 10, 0, 0
+------------------------------
+------- Cycle 2 ------- 
+[ACTIVE]: 11111111
+[PC: 0x80000008][WAY 0] ADDI 10, 10, 96
+[PC: 0x80000008][WAY 1] ADDI 10, 10, 96
+[PC: 0x80000008][WAY 2] ADDI 10, 10, 96
+[PC: 0x80000008][WAY 3] ADDI 10, 10, 96
+[PC: 0x80000008][WAY 4] ADDI 10, 10, 96
+[PC: 0x80000008][WAY 5] ADDI 10, 10, 96
+[PC: 0x80000008][WAY 6] ADDI 10, 10, 96
+[PC: 0x80000008][WAY 7] ADDI 10, 10, 96
+------------------------------
+------- Cycle 3 ------- 
+[ACTIVE]: 11111111
+[PC: 0x8000000c][WAY 0] CSRRW 0, reconvpc, 10
+[PC: 0x8000000c][WAY 1] CSRRW 0, reconvpc, 10
+[PC: 0x8000000c][WAY 2] CSRRW 0, reconvpc, 10
+[PC: 0x8000000c][WAY 3] CSRRW 0, reconvpc, 10
+[PC: 0x8000000c][WAY 4] CSRRW 0, reconvpc, 10
+[PC: 0x8000000c][WAY 5] CSRRW 0, reconvpc, 10
+[PC: 0x8000000c][WAY 6] CSRRW 0, reconvpc, 10
+[PC: 0x8000000c][WAY 7] CSRRW 0, reconvpc, 10
+------------------------------
+------- Cycle 4 ------- 
+[ACTIVE]: 11111111
+[PC: 0x80000010][WAY 0] ADDI 10, 0, 0
+[PC: 0x80000010][WAY 1] ADDI 10, 0, 0
+[PC: 0x80000010][WAY 2] ADDI 10, 0, 0
+[PC: 0x80000010][WAY 3] ADDI 10, 0, 0
+[PC: 0x80000010][WAY 4] ADDI 10, 0, 0
+[PC: 0x80000010][WAY 5] ADDI 10, 0, 0
+[PC: 0x80000010][WAY 6] ADDI 10, 0, 0
+[PC: 0x80000010][WAY 7] ADDI 10, 0, 0
+------------------------------
+------- Cycle 5 ------- 
+[ACTIVE]: 11111111
+[PC: 0x80000014][WAY 0] CSRRS 5, mhartid, 0
+[PC: 0x80000014][WAY 1] CSRRS 5, mhartid, 0
+[PC: 0x80000014][WAY 2] CSRRS 5, mhartid, 0
+[PC: 0x80000014][WAY 3] CSRRS 5, mhartid, 0
+[PC: 0x80000014][WAY 4] CSRRS 5, mhartid, 0
+[PC: 0x80000014][WAY 5] CSRRS 5, mhartid, 0
+[PC: 0x80000014][WAY 6] CSRRS 5, mhartid, 0
+[PC: 0x80000014][WAY 7] CSRRS 5, mhartid, 0
+------------------------------
+------- Cycle 6 ------- 
+[ACTIVE]: 11111111
+[PC: 0x80000018][WAY 0] BGT 5, 1, 68
+[PC: 0x80000018][WAY 1] BGT 5, 1, 68
+[PC: 0x80000018][WAY 2] BGT 5, 1, 68
+[PC: 0x80000018][WAY 3] BGT 5, 1, 68
+[PC: 0x80000018][WAY 4] BGT 5, 1, 68
+Branched To 2147483740!
+[PC: 0x80000018][WAY 5] BGT 5, 1, 68
+Branched To 2147483740!
+[PC: 0x80000018][WAY 6] BGT 5, 1, 68
+Branched To 2147483740!
+[PC: 0x80000018][WAY 7] BGT 5, 1, 68
+Branched To 2147483740!
+[DEBUG] Divergence detected! end_pc from reconvpc CSRs: [0x80000064] | [PC+76] | [BASE+100]
+[DEBUG] Starting first path: PC: 0x8000005c, Active=[0, 0, 0, 0, 1, 1, 1, 1]
+------------------------------
+------- Cycle 7 ------- 
+[ACTIVE]: 00001111
+[PC: 0x8000005c][WAY 4] ADDI 16, 0, 16
+[PC: 0x8000005c][WAY 5] ADDI 16, 0, 16
+[PC: 0x8000005c][WAY 6] ADDI 16, 0, 16
+[PC: 0x8000005c][WAY 7] ADDI 16, 0, 16
+------------------------------
+------- Cycle 8 ------- 
+[ACTIVE]: 00001111
+[PC: 0x80000060][WAY 4] ADDI 17, 0, 17
+[PC: 0x80000060][WAY 5] ADDI 17, 0, 17
+[PC: 0x80000060][WAY 6] ADDI 17, 0, 17
+[PC: 0x80000060][WAY 7] ADDI 17, 0, 17
+[DEBUG] Reached convergence point at PC: 0x80000064 (0x80000064 == 0x80000064)
+------------------------------
+------- Cycle 9 ------- 
+[DEBUG] Switching to next path -> PC: 0x8000001c | Mask: [1, 1, 1, 1, 0, 0, 0, 0]
+[ACTIVE]: 11110000
+[PC: 0x8000001c][WAY 0] ADDI 14, 0, 14
+[PC: 0x8000001c][WAY 1] ADDI 14, 0, 14
+[PC: 0x8000001c][WAY 2] ADDI 14, 0, 14
+[PC: 0x8000001c][WAY 3] ADDI 14, 0, 14
+------------------------------
+------- Cycle 10 ------- 
+[ACTIVE]: 11110000
+[PC: 0x80000020][WAY 0] ADDI 15, 0, 15
+[PC: 0x80000020][WAY 1] ADDI 15, 0, 15
+[PC: 0x80000020][WAY 2] ADDI 15, 0, 15
+[PC: 0x80000020][WAY 3] ADDI 15, 0, 15
+------------------------------
+------- Cycle 11 ------- 
+[ACTIVE]: 11110000
+[PC: 0x80000024][WAY 0] ADDI 2, 0, 1
+[PC: 0x80000024][WAY 1] ADDI 2, 0, 1
+[PC: 0x80000024][WAY 2] ADDI 2, 0, 1
+[PC: 0x80000024][WAY 3] ADDI 2, 0, 1
+------------------------------
+------- Cycle 12 ------- 
+[ACTIVE]: 11110000
+[PC: 0x80000028][WAY 0] AUIPC 10, 0, 0
+[PC: 0x80000028][WAY 1] AUIPC 10, 0, 0
+[PC: 0x80000028][WAY 2] AUIPC 10, 0, 0
+[PC: 0x80000028][WAY 3] AUIPC 10, 0, 0
+------------------------------
+------- Cycle 13 ------- 
+[ACTIVE]: 11110000
+[PC: 0x8000002c][WAY 0] ADDI 10, 10, 40
+[PC: 0x8000002c][WAY 1] ADDI 10, 10, 40
+[PC: 0x8000002c][WAY 2] ADDI 10, 10, 40
+[PC: 0x8000002c][WAY 3] ADDI 10, 10, 40
+------------------------------
+------- Cycle 14 ------- 
+[ACTIVE]: 11110000
+[PC: 0x80000030][WAY 0] CSRRW 0, reconvpc, 10
+[PC: 0x80000030][WAY 1] CSRRW 0, reconvpc, 10
+[PC: 0x80000030][WAY 2] CSRRW 0, reconvpc, 10
+[PC: 0x80000030][WAY 3] CSRRW 0, reconvpc, 10
+------------------------------
+------- Cycle 15 ------- 
+[ACTIVE]: 11110000
+[PC: 0x80000034][WAY 0] ADDI 10, 0, 0
+[PC: 0x80000034][WAY 1] ADDI 10, 0, 0
+[PC: 0x80000034][WAY 2] ADDI 10, 0, 0
+[PC: 0x80000034][WAY 3] ADDI 10, 0, 0
+------------------------------
+------- Cycle 16 ------- 
+[ACTIVE]: 11110000
+[PC: 0x80000038][WAY 0] BGT 5, 2, 16
+[PC: 0x80000038][WAY 1] BGT 5, 2, 16
+[PC: 0x80000038][WAY 2] BGT 5, 2, 16
+Branched To 2147483720!
+[PC: 0x80000038][WAY 3] BGT 5, 2, 16
+Branched To 2147483720!
+[DEBUG] Divergence detected! end_pc from reconvpc CSRs: [0x80000050] | [PC+24] | [BASE+80]
+[DEBUG] Starting first path: PC: 0x80000048, Active=[0, 0, 1, 1, 0, 0, 0, 0]
+------------------------------
+------- Cycle 17 ------- 
+[ACTIVE]: 00110000
+[PC: 0x80000048][WAY 2] ADDI 22, 0, 22
+[PC: 0x80000048][WAY 3] ADDI 22, 0, 22
+------------------------------
+------- Cycle 18 ------- 
+[ACTIVE]: 00110000
+[PC: 0x8000004c][WAY 2] ADDI 23, 0, 23
+[PC: 0x8000004c][WAY 3] ADDI 23, 0, 23
+[DEBUG] Reached convergence point at PC: 0x80000050 (0x80000050 == 0x80000050)
+------------------------------
+------- Cycle 19 ------- 
+[DEBUG] Switching to next path -> PC: 0x8000003c | Mask: [1, 1, 0, 0, 0, 0, 0, 0]
+[ACTIVE]: 11000000
+[PC: 0x8000003c][WAY 0] ADDI 20, 0, 20
+[PC: 0x8000003c][WAY 1] ADDI 20, 0, 20
+------------------------------
+------- Cycle 20 ------- 
+[ACTIVE]: 11000000
+[PC: 0x80000040][WAY 0] ADDI 21, 0, 21
+[PC: 0x80000040][WAY 1] ADDI 21, 0, 21
+------------------------------
+------- Cycle 21 ------- 
+[ACTIVE]: 11000000
+[PC: 0x80000044][WAY 0] JMP 0, 12
+Jumping To 2147483728!
+[PC: 0x80000044][WAY 1] JMP 0, 12
+Jumping To 2147483728!
+[DEBUG] Reached convergence point at PC: 0x80000050 (0x80000050 == 0x80000050)
+------------------------------
+------- Cycle 22 ------- 
+[ACTIVE]: 11110000
+[PC: 0x80000050][WAY 0] ADDI 24, 0, 24
+[PC: 0x80000050][WAY 1] ADDI 24, 0, 24
+[PC: 0x80000050][WAY 2] ADDI 24, 0, 24
+[PC: 0x80000050][WAY 3] ADDI 24, 0, 24
+------------------------------
+------- Cycle 23 ------- 
+[ACTIVE]: 11110000
+[PC: 0x80000054][WAY 0] ADDI 25, 0, 25
+[PC: 0x80000054][WAY 1] ADDI 25, 0, 25
+[PC: 0x80000054][WAY 2] ADDI 25, 0, 25
+[PC: 0x80000054][WAY 3] ADDI 25, 0, 25
+------------------------------
+------- Cycle 24 ------- 
+[ACTIVE]: 11110000
+[PC: 0x80000058][WAY 0] JMP 0, 12
+Jumping To 2147483748!
+[PC: 0x80000058][WAY 1] JMP 0, 12
+Jumping To 2147483748!
+[PC: 0x80000058][WAY 2] JMP 0, 12
+Jumping To 2147483748!
+[PC: 0x80000058][WAY 3] JMP 0, 12
+Jumping To 2147483748!
+[DEBUG] Reached convergence point at PC: 0x80000064 (0x80000064 == 0x80000064)
+------------------------------
+------- Cycle 25 ------- 
+[ACTIVE]: 11111111
+[PC: 0x80000064][WAY 0] ADDI 18, 0, 18
+[PC: 0x80000064][WAY 1] ADDI 18, 0, 18
+[PC: 0x80000064][WAY 2] ADDI 18, 0, 18
+[PC: 0x80000064][WAY 3] ADDI 18, 0, 18
+[PC: 0x80000064][WAY 4] ADDI 18, 0, 18
+[PC: 0x80000064][WAY 5] ADDI 18, 0, 18
+[PC: 0x80000064][WAY 6] ADDI 18, 0, 18
+[PC: 0x80000064][WAY 7] ADDI 18, 0, 18
+------------------------------
+------- Cycle 26 ------- 
+[ACTIVE]: 11111111
+[PC: 0x80000068][WAY 0] ADDI 19, 0, 19
+[PC: 0x80000068][WAY 1] ADDI 19, 0, 19
+[PC: 0x80000068][WAY 2] ADDI 19, 0, 19
+[PC: 0x80000068][WAY 3] ADDI 19, 0, 19
+[PC: 0x80000068][WAY 4] ADDI 19, 0, 19
+[PC: 0x80000068][WAY 5] ADDI 19, 0, 19
+[PC: 0x80000068][WAY 6] ADDI 19, 0, 19
+[PC: 0x80000068][WAY 7] ADDI 19, 0, 19
+------------------------------
+------- Cycle 27 ------- 
+------------------------------
+
+[Testing Way 0]
+Register x14: expected=14, actual=14 [PASS]
+Register x15: expected=15, actual=15 [PASS]
+Register x16: expected=00, actual=00 [PASS]
+Register x17: expected=00, actual=00 [PASS]
+Register x18: expected=18, actual=18 [PASS]
+Register x19: expected=19, actual=19 [PASS]
+Register x20: expected=20, actual=20 [PASS]
+Register x21: expected=21, actual=21 [PASS]
+Register x22: expected=00, actual=00 [PASS]
+Register x23: expected=00, actual=00 [PASS]
+Register x24: expected=24, actual=24 [PASS]
+Register x25: expected=25, actual=25 [PASS]
+
+[Testing Way 1]
+Register x14: expected=14, actual=14 [PASS]
+Register x15: expected=15, actual=15 [PASS]
+Register x16: expected=00, actual=00 [PASS]
+Register x17: expected=00, actual=00 [PASS]
+Register x18: expected=18, actual=18 [PASS]
+Register x19: expected=19, actual=19 [PASS]
+Register x20: expected=20, actual=20 [PASS]
+Register x21: expected=21, actual=21 [PASS]
+Register x22: expected=00, actual=00 [PASS]
+Register x23: expected=00, actual=00 [PASS]
+Register x24: expected=24, actual=24 [PASS]
+Register x25: expected=25, actual=25 [PASS]
+
+[Testing Way 2]
+Register x14: expected=14, actual=14 [PASS]
+Register x15: expected=15, actual=15 [PASS]
+Register x16: expected=00, actual=00 [PASS]
+Register x17: expected=00, actual=00 [PASS]
+Register x18: expected=18, actual=18 [PASS]
+Register x19: expected=19, actual=19 [PASS]
+Register x20: expected=00, actual=00 [PASS]
+Register x21: expected=00, actual=00 [PASS]
+Register x22: expected=22, actual=22 [PASS]
+Register x23: expected=23, actual=23 [PASS]
+Register x24: expected=24, actual=24 [PASS]
+Register x25: expected=25, actual=25 [PASS]
+
+[Testing Way 3]
+Register x14: expected=14, actual=14 [PASS]
+Register x15: expected=15, actual=15 [PASS]
+Register x16: expected=00, actual=00 [PASS]
+Register x17: expected=00, actual=00 [PASS]
+Register x18: expected=18, actual=18 [PASS]
+Register x19: expected=19, actual=19 [PASS]
+Register x20: expected=00, actual=00 [PASS]
+Register x21: expected=00, actual=00 [PASS]
+Register x22: expected=22, actual=22 [PASS]
+Register x23: expected=23, actual=23 [PASS]
+Register x24: expected=24, actual=24 [PASS]
+Register x25: expected=25, actual=25 [PASS]
+
+[Testing Way 4]
+Register x14: expected=00, actual=00 [PASS]
+Register x15: expected=00, actual=00 [PASS]
+Register x16: expected=16, actual=16 [PASS]
+Register x17: expected=17, actual=17 [PASS]
+Register x18: expected=18, actual=18 [PASS]
+Register x19: expected=19, actual=19 [PASS]
+Register x20: expected=00, actual=00 [PASS]
+Register x21: expected=00, actual=00 [PASS]
+Register x22: expected=00, actual=00 [PASS]
+Register x23: expected=00, actual=00 [PASS]
+Register x24: expected=00, actual=00 [PASS]
+Register x25: expected=00, actual=00 [PASS]
+
+[Testing Way 5]
+Register x14: expected=00, actual=00 [PASS]
+Register x15: expected=00, actual=00 [PASS]
+Register x16: expected=16, actual=16 [PASS]
+Register x17: expected=17, actual=17 [PASS]
+Register x18: expected=18, actual=18 [PASS]
+Register x19: expected=19, actual=19 [PASS]
+Register x20: expected=00, actual=00 [PASS]
+Register x21: expected=00, actual=00 [PASS]
+Register x22: expected=00, actual=00 [PASS]
+Register x23: expected=00, actual=00 [PASS]
+Register x24: expected=00, actual=00 [PASS]
+Register x25: expected=00, actual=00 [PASS]
+
+[Testing Way 6]
+Register x14: expected=00, actual=00 [PASS]
+Register x15: expected=00, actual=00 [PASS]
+Register x16: expected=16, actual=16 [PASS]
+Register x17: expected=17, actual=17 [PASS]
+Register x18: expected=18, actual=18 [PASS]
+Register x19: expected=19, actual=19 [PASS]
+Register x20: expected=00, actual=00 [PASS]
+Register x21: expected=00, actual=00 [PASS]
+Register x22: expected=00, actual=00 [PASS]
+Register x23: expected=00, actual=00 [PASS]
+Register x24: expected=00, actual=00 [PASS]
+Register x25: expected=00, actual=00 [PASS]
+
+[Testing Way 7]
+Register x14: expected=00, actual=00 [PASS]
+Register x15: expected=00, actual=00 [PASS]
+Register x16: expected=16, actual=16 [PASS]
+Register x17: expected=17, actual=17 [PASS]
+Register x18: expected=18, actual=18 [PASS]
+Register x19: expected=19, actual=19 [PASS]
+Register x20: expected=00, actual=00 [PASS]
+Register x21: expected=00, actual=00 [PASS]
+Register x22: expected=00, actual=00 [PASS]
+Register x23: expected=00, actual=00 [PASS]
+Register x24: expected=00, actual=00 [PASS]
+Register x25: expected=00, actual=00 [PASS]
+
+[OK] All tests pass!
+[Way 0]: Register File Contents
+  [x0]: 0
+  [x1]: 3
+  [x2]: 1
+  [x3]: 0
+  [x4]: 0
+  [x5]: 0
+  [x6]: 0
+  [x7]: 0
+  [x8]: 0
+  [x9]: 0
+  [x10]: 0
+  [x11]: 0
+  [x12]: 0
+  [x13]: 0
+  [x14]: 14
+  [x15]: 15
+  [x16]: 0
+  [x17]: 0
+  [x18]: 18
+  [x19]: 19
+  [x20]: 20
+  [x21]: 21
+  [x22]: 0
+  [x23]: 0
+  [x24]: 24
+  [x25]: 25
+  [x26]: 0
+  [x27]: 0
+  [x28]: 0
+  [x29]: 0
+  [x30]: 0
+  [x31]: 0
+[Way 1]: Register File Contents
+  [x0]: 0
+  [x1]: 3
+  [x2]: 1
+  [x3]: 0
+  [x4]: 0
+  [x5]: 1
+  [x6]: 0
+  [x7]: 0
+  [x8]: 0
+  [x9]: 0
+  [x10]: 0
+  [x11]: 0
+  [x12]: 0
+  [x13]: 0
+  [x14]: 14
+  [x15]: 15
+  [x16]: 0
+  [x17]: 0
+  [x18]: 18
+  [x19]: 19
+  [x20]: 20
+  [x21]: 21
+  [x22]: 0
+  [x23]: 0
+  [x24]: 24
+  [x25]: 25
+  [x26]: 0
+  [x27]: 0
+  [x28]: 0
+  [x29]: 0
+  [x30]: 0
+  [x31]: 0
+[Way 2]: Register File Contents
+  [x0]: 0
+  [x1]: 3
+  [x2]: 1
+  [x3]: 0
+  [x4]: 0
+  [x5]: 2
+  [x6]: 0
+  [x7]: 0
+  [x8]: 0
+  [x9]: 0
+  [x10]: 0
+  [x11]: 0
+  [x12]: 0
+  [x13]: 0
+  [x14]: 14
+  [x15]: 15
+  [x16]: 0
+  [x17]: 0
+  [x18]: 18
+  [x19]: 19
+  [x20]: 0
+  [x21]: 0
+  [x22]: 22
+  [x23]: 23
+  [x24]: 24
+  [x25]: 25
+  [x26]: 0
+  [x27]: 0
+  [x28]: 0
+  [x29]: 0
+  [x30]: 0
+  [x31]: 0
+[Way 3]: Register File Contents
+  [x0]: 0
+  [x1]: 3
+  [x2]: 1
+  [x3]: 0
+  [x4]: 0
+  [x5]: 3
+  [x6]: 0
+  [x7]: 0
+  [x8]: 0
+  [x9]: 0
+  [x10]: 0
+  [x11]: 0
+  [x12]: 0
+  [x13]: 0
+  [x14]: 14
+  [x15]: 15
+  [x16]: 0
+  [x17]: 0
+  [x18]: 18
+  [x19]: 19
+  [x20]: 0
+  [x21]: 0
+  [x22]: 22
+  [x23]: 23
+  [x24]: 24
+  [x25]: 25
+  [x26]: 0
+  [x27]: 0
+  [x28]: 0
+  [x29]: 0
+  [x30]: 0
+  [x31]: 0
+[Way 4]: Register File Contents
+  [x0]: 0
+  [x1]: 3
+  [x2]: 0
+  [x3]: 0
+  [x4]: 0
+  [x5]: 4
+  [x6]: 0
+  [x7]: 0
+  [x8]: 0
+  [x9]: 0
+  [x10]: 0
+  [x11]: 0
+  [x12]: 0
+  [x13]: 0
+  [x14]: 0
+  [x15]: 0
+  [x16]: 16
+  [x17]: 17
+  [x18]: 18
+  [x19]: 19
+  [x20]: 0
+  [x21]: 0
+  [x22]: 0
+  [x23]: 0
+  [x24]: 0
+  [x25]: 0
+  [x26]: 0
+  [x27]: 0
+  [x28]: 0
+  [x29]: 0
+  [x30]: 0
+  [x31]: 0
+[Way 5]: Register File Contents
+  [x0]: 0
+  [x1]: 3
+  [x2]: 0
+  [x3]: 0
+  [x4]: 0
+  [x5]: 5
+  [x6]: 0
+  [x7]: 0
+  [x8]: 0
+  [x9]: 0
+  [x10]: 0
+  [x11]: 0
+  [x12]: 0
+  [x13]: 0
+  [x14]: 0
+  [x15]: 0
+  [x16]: 16
+  [x17]: 17
+  [x18]: 18
+  [x19]: 19
+  [x20]: 0
+  [x21]: 0
+  [x22]: 0
+  [x23]: 0
+  [x24]: 0
+  [x25]: 0
+  [x26]: 0
+  [x27]: 0
+  [x28]: 0
+  [x29]: 0
+  [x30]: 0
+  [x31]: 0
+[Way 6]: Register File Contents
+  [x0]: 0
+  [x1]: 3
+  [x2]: 0
+  [x3]: 0
+  [x4]: 0
+  [x5]: 6
+  [x6]: 0
+  [x7]: 0
+  [x8]: 0
+  [x9]: 0
+  [x10]: 0
+  [x11]: 0
+  [x12]: 0
+  [x13]: 0
+  [x14]: 0
+  [x15]: 0
+  [x16]: 16
+  [x17]: 17
+  [x18]: 18
+  [x19]: 19
+  [x20]: 0
+  [x21]: 0
+  [x22]: 0
+  [x23]: 0
+  [x24]: 0
+  [x25]: 0
+  [x26]: 0
+  [x27]: 0
+  [x28]: 0
+  [x29]: 0
+  [x30]: 0
+  [x31]: 0
+[Way 7]: Register File Contents
+  [x0]: 0
+  [x1]: 3
+  [x2]: 0
+  [x3]: 0
+  [x4]: 0
+  [x5]: 7
+  [x6]: 0
+  [x7]: 0
+  [x8]: 0
+  [x9]: 0
+  [x10]: 0
+  [x11]: 0
+  [x12]: 0
+  [x13]: 0
+  [x14]: 0
+  [x15]: 0
+  [x16]: 16
+  [x17]: 17
+  [x18]: 18
+  [x19]: 19
+  [x20]: 0
+  [x21]: 0
+  [x22]: 0
+  [x23]: 0
+  [x24]: 0
+  [x25]: 0
+  [x26]: 0
+  [x27]: 0
+  [x28]: 0
+  [x29]: 0
+  [x30]: 0
+  [x31]: 0

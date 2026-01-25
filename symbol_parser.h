@@ -1,3 +1,6 @@
+#ifndef SYMBOL_PARSER_H
+#define SYMBOL_PARSER_H
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -16,7 +19,7 @@ typedef struct symbol_t{
 static size_t SYMBOL_TABLE_SIZE = 0;
 static symbol_t* SYMBOL_TABLE = NULL;
 
-long load_symbols(const char* path){
+inline long load_symbols(const char* path){
     FILE *file;
     char line[MAX_LINE_LENGTH];
     char *token;
@@ -83,3 +86,5 @@ long load_symbols(const char* path){
     printf("Loaded %ld Symbols from \"%s\"\n", SYMBOL_TABLE_SIZE, path);
     return SYMBOL_TABLE_SIZE;
 }
+
+#endif // SYMBOL_PARSER_H

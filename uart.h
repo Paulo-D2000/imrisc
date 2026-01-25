@@ -1,4 +1,5 @@
-#pragma once
+#ifndef UART_H
+#define UART_H
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -11,3 +12,5 @@ static uint8_t UART[UART_SIZE] = {0};
 void uart_printf();
 static bool uart_newbyte = false;
 static bool uart_rx = false;
+
+#endif // UART_H

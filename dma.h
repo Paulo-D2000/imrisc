@@ -1,4 +1,5 @@
-#pragma once
+#ifndef DMA_H
+#define DMA_H
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -22,3 +23,5 @@ static uint32_t dmaSrcAddr = 0;
 static uint32_t dmaTransferSz = 0;
 static uint32_t dmaCommit = 0;
 void dma_controller();
+
+#endif // DMA_H

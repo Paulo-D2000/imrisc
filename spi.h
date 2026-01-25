@@ -1,4 +1,5 @@
-#pragma once
+#ifndef SPI_H
+#define SPI_H
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -9,3 +10,5 @@
 static uint8_t SPI[SPI_SIZE] = {0};
 
 void spi_printf(uint32_t addr, bool rw);
+
+#endif // SPI_H

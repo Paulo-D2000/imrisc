@@ -1,3 +1,6 @@
+#ifndef TIMER_H
+#define TIMER_H
+
 #include <stdio.h>
 #include <stdint.h>
 
@@ -81,3 +84,5 @@ static inline  void timer_end(Timer *timer) {
     timer->end_time = ns();
     timer->duration = (timer->end_time - timer->start_time);
 }
+
+#endif // TIMER_H

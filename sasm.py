@@ -55,8 +55,8 @@ class SAsm:
             if mla:
                 iop, dst, label = mla.groups()
                 dst = int(dst)
-                self.emit(Op.AUIPC, dst, 0, 0, f"%hi({label})", f"# Load high part of address for {label}")
-                self.emit(Op.ADDI, dst, dst, 0, f"%lo({label})", f"# Add low part of address for {label}")
+                self.emit(Op.AUIPC, dst, 0, 0, f"%pcrel_hi({label})", f"# Load high part of address for {label}")
+                self.emit(Op.ADDI, dst, dst, 0, f"%pcrel_lo({label})", f"# Add low part of address for {label}")
                 continue
 
             mli = re.match(r'(LI)\s+x(\d+),\s*(-?\d+)', line)
@@ -104,13 +104,14 @@ class SAsm:
                 self.emit(Op.JMP, 0, 0, 0, label, f"# Unconditional jump to {label}")
                 continue
 
-            # Match CSRRS instruction (control/status register read/write)
-            mcsr = re.match(r'(CSRRS)\s+x(\d+),\s*(\S+),\s*x(\d+)', line)
+            # Match CSR instructions (control/status register read/write)
+            mcsr = re.match(r'(CSRRS|CSRRW)\s+x(\d+),\s*(\S+),\s*x(\d+)', line)
             if mcsr:
                 csrop, dst, csr_name, src1 = mcsr.groups()
                 dst, src1 = int(dst), int(src1)
                 csr_enum = CSR[csr_name]  # Convert string to CSR enum
-                self.emit(Op.CSRRS, dst, src1, 0, csr_enum, f"# Read CSR {csr_name}")
+                csr_op_enum = Op[csrop]
+                self.emit(csr_op_enum, dst, src1, 0, csr_enum, f"# Read CSR {csr_name}")
                 continue
 
         self.resolve_labels()
@@ -125,9 +126,34 @@ class SAsm:
                 if lab in self.labels:
                     label_index = self.labels[lab]
                     # Resolve label to absolute byte address
-                    instr.imm = label_index - self.base # Each instruction is 4 bytes
+                    # instr.imm = label_index - self.base # Each instruction is 4 bytes
+                    current_pc = i * 4 + self.base
+                    instr.imm = self.labels[lab] - current_pc  # PC-relative offset
                     print(f"Resolving label '{lab}' (label index {label_index}) to byte offset {instr.imm}")
                 else:
+                    pcrel_hi = re.match(r'\%pcrel_hi\((\S+)\)',lab)
+                    if pcrel_hi:
+                        hlab = pcrel_hi.groups()[0]
+                        label_index = self.labels[hlab]
+                        # Resolve label to relative byte address
+                        label_addr = self.labels[hlab]
+                        current_pc = i * 4 + self.base - 4
+                        offset = label_addr - current_pc 
+                        instr.imm = (offset >> 12) & 0xFFFFF # Top 20 bits
+                        print(f"Resolving (high) address '{lab}' (label index {label_index}) to byte offset {instr.imm}")
+                        continue
+
+                    pcrel_lo = re.match(r'\%pcrel_lo\((\S+)\)',lab)
+                    if pcrel_lo:
+                        llab = pcrel_lo.groups()[0]
+                        # Resolve label to relative byte address
+                        label_addr = self.labels[hlab]
+                        current_pc = i * 4 + self.base - 4
+                        offset = label_addr - current_pc 
+                        instr.imm = offset & 0xFFF # Bottom 12 bits
+                        print(f"Resolving (low) address '{lab}' (label index {label_index}) to byte offset {instr.imm}")
+                        continue
+
                     hi = re.match(r'\%hi\((\S+)\)',lab)
                     if hi:
                         hlab = hi.groups()[0]
@@ -153,7 +179,7 @@ if __name__ == "__main__":
     pseudo_asm = """
     .start:
     LA x5, .end # set x5 = [.end]
-    CSRRS x0, reconvpc, x5
+    CSRRW x0, reconvpc, x5
     CSRRS x4, mhartid, x0
     ADDI x1, x0, 1
     

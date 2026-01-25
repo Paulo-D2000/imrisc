@@ -1,4 +1,4 @@
-from enum import Enum
+from enum import Enum, auto
 from dataclasses import dataclass
 
 class CSR(Enum):
@@ -12,21 +12,22 @@ class RegisterFile:
         self.csrs[CSR.mhartid.value] = tid
 
 class Op(Enum):
-    ADD = 0
-    SUB = 1
-    MUL = 2
-    DIV = 3
-    BEQ = 4
-    BNE = 5
-    BLT = 6
-    BGT = 7
-    BLE = 8
-    BGE = 9
-    JMP = 10
-    ADDI = 11
-    CSRRS = 12
-    AUIPC = 13
-    LUI = 14
+    ADD = auto()
+    SUB = auto()
+    MUL = auto()
+    DIV = auto()
+    BEQ = auto()
+    BNE = auto()
+    BLT = auto()
+    BGT = auto()
+    BLE = auto()
+    BGE = auto()
+    JMP = auto()
+    ADDI = auto()
+    CSRRS = auto()
+    CSRRW = auto()
+    AUIPC = auto()
+    LUI = auto()
 
 @dataclass
 class Instr:
