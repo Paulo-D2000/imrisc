@@ -1,4 +1,5 @@
-#pragma once
+#ifndef MMIO_H
+#define MMIO_H
 
 #include "config.h"
 #include "ram.h"
@@ -348,3 +349,5 @@ inline uint16_t mmio_to_short(const mmio_result_t res){
 inline uint32_t mmio_to_word(const mmio_result_t res){
     return res.data[3] << 24 | res.data[2] << 16 | res.data[1] << 8 | res.data[0];
 }
+
+#endif // MMIO_H

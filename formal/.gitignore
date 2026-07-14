@@ -1,0 +1,10 @@
+# SymbiYosys run outputs (do not commit)
+axilite_slave/
+axilite_master/
+axilite_slave_prf/
+axilite_slave_cvr/
+axilite_master_prf/
+axilite_master_cvr/
+# scratch / generated test files
+init_test.v
+tb_init_test.v

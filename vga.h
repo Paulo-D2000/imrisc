@@ -1,4 +1,5 @@
-#pragma once
+#ifndef VGA_H
+#define VGA_H
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -16,3 +17,5 @@ static uint8_t VGA[VGA_SIZE] = {0};
 static bool vga_new_pixel = false;
 static uint32_t vga_frameCount = 0;
 static uint32_t vga_vblank = 0;
+
+#endif // VGA_H

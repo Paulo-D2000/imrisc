@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.5)
 
 IF(CMAKE_COMPILER_IS_GNUCC)
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0")
@@ -7,7 +7,7 @@ ENDIF(CMAKE_COMPILER_IS_GNUCC)
 
 project(ImRisc VERSION 1.0 LANGUAGES C CXX)
 
-set(EMULATOR_SRCS debugging.h cpu.h ram.h rom.h uart.h spi.h vga.h symbol_parser.h breakpoints.h)
+set(EMULATOR_SRCS debugging.h cpu.h ram.h rom.h uart.h spi.h vga.h symbol_parser.h breakpoints.h ram.c)
 
 #add_executable(${PROJECT_NAME} main.c ${EMULATOR_SRCS})
 

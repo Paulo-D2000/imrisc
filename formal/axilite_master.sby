@@ -1,0 +1,29 @@
+# SymbiYosys configuration: AXI-Lite Master Port formal verification
+#
+# Usage:
+#   sby -f formal/axilite_master.sby prf
+#   sby -f formal/axilite_master.sby cvr
+
+[tasks]
+prf
+cvr
+
+[options]
+prf: mode prove
+prf: depth 30
+cvr: mode cover
+cvr: depth 30
+
+[engines]
+smtbmc
+
+[script]
+read -formal AXILiteMasterPort.v
+read -formal faxil_master.v
+read -formal axilite_master_top.v
+prep -top axilite_master_top
+
+[files]
+rtl/AXILiteMasterPort.v
+lib/faxil_master.v
+top/axilite_master_top.v

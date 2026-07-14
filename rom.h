@@ -1,4 +1,5 @@
-#pragma once
+#ifndef ROM_H
+#define ROM_H
 
 #include <stdint.h>
 #include <stddef.h>
@@ -10,3 +11,5 @@ static uint8_t ROM[ROM_SIZE] = {0};
 #define WAD_ROM_ADDR 0x40200000
 static size_t WAD_ROM_SIZE = 0;
 static uint8_t* WAD_ROM = NULL;
+
+#endif // ROM_H

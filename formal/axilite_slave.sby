@@ -1,0 +1,29 @@
+# SymbiYosys configuration: AXI-Lite Slave Port formal verification
+#
+# Usage:
+#   sby -f formal/axilite_slave.sby prf
+#   sby -f formal/axilite_slave.sby cvr
+
+[tasks]
+prf
+cvr
+
+[options]
+prf: mode prove
+prf: depth 30
+cvr: mode cover
+cvr: depth 30
+
+[engines]
+smtbmc
+
+[script]
+read -formal AXILiteSlavePort.v
+read -formal faxil_slave.v
+read -formal axilite_slave_top.v
+prep -top axilite_slave_top
+
+[files]
+rtl/AXILiteSlavePort.v
+lib/faxil_slave.v
+top/axilite_slave_top.v
